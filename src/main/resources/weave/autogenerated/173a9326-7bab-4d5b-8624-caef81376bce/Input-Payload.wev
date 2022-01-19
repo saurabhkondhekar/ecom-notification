@@ -1,0 +1,10 @@
+%dw 2.0
+
+type auto_173a9326_7bab_4d5b_8624_caef81376bce_Input_Payload = {
+  price: Number, 
+  itemsId: Number, 
+  name: String, 
+  description: String, 
+  _?: Any
+} {"description": "items"}
+

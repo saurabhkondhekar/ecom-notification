@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="59304e29-798f-4b3e-a3c0-fb65ca178b8e" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.username}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="8d5f3c5c-635d-4db2-9a11-7787144c2b75" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="saurabh.kondhekar107@gmail.com" password="Iwtet123#!@" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="updateProductDetailsFlow" doc:id="173a9326-7bab-4d5b-8624-caef81376bce" >
+		<logger level="INFO" doc:name="Logger" doc:id="0bdd6502-1c51-4d28-a3eb-605c1a0d9258" message='"In updateProductDetailsFlow :: ecom-alert-notification-process"'/>
+		<ee:transform doc:name="Transform Message" doc:id="32b380f4-0725-4436-a02c-f869bcef439a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[(&quot;'%&quot; ++ attributes.uriParams.items_Id ++ &quot;%'&quot;)]" doc:name="productId" doc:id="29ab6d98-d728-458f-b084-306d80bdcd2c" variableName="productId"/>
+		<db:update doc:name="Update Product Details" doc:id="5082c3de-8852-4961-a3ee-a2ac19df1929" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE ecom_products SET
+`product_id` = :product_id,
+`product_name` = :product_name,
+`description` = :description,
+`product_price` = :price
+WHERE `product_id` = :product_id;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'product_id' : attributes.uriParams.items_Id,
+'product_name': payload.name, 
+'description': payload.description, 
+'price': payload.price
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Choice" doc:id="ba4e9ec2-2a38-45d2-981d-c9278d593149" >
+			<when expression="#[payload.affectedRows&gt;0]" >
+				<db:select doc:name="Get Email Fom Wishlist" doc:id="e37b69a6-9337-4a73-bdcd-e007730db836" config-ref="Database_Config">
+					<db:sql ><![CDATA[select email from user_accounts where wishlist like '%101%']]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+productID : vars.productId
+}]]]></db:input-parameters>
+				</db:select>
+				<choice doc:name="Choice" doc:id="35639825-1718-4ddd-acd6-3c512a98aa84">
+					<when expression="#[payload != null]">
+						<foreach doc:name="For Each" doc:id="92f335b6-73dd-4bde-8b87-8153a44ea1b8" collection="#[payload.email]">
+							<email:send doc:name="Send Email" doc:id="2076fb8e-a68c-4ac1-b2f4-897f9d860a14" config-ref="Email_SMTP" fromAddress="saurabh.kondhekar107@gmail.com">
+								<email:to-addresses >
+									<email:to-address value="saurabh.s.kondhekar@apisero.com" />
+								</email:to-addresses>
+								<email:body >
+									<email:content ><![CDATA[#["Price changed for Product in your wishlist"]]]></email:content>
+								</email:body>
+							</email:send>
+						</foreach>
+					</when>
+				</choice>
+				<ee:transform doc:name="Transform Message" doc:id="b033b6cd-607f-42a0-9191-27447596c586" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Product Data Updated successfully"
+	
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="2317f5a1-fdd4-4bd2-aed6-9fe546154010" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Unable to Find Product Details"
+	
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="fdbf649c-36d4-409a-9a83-d5367d408c86" message='#[" In updateProductDetailsflow ::Data Updated Succesfully"]'/>
+	</flow>
+</mule>
