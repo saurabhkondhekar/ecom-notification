@@ -89,6 +89,6 @@ output application/json
 				</ee:transform>
 			</otherwise>
 		</choice>
-		<logger level="INFO" doc:name="Logger" doc:id="fdbf649c-36d4-409a-9a83-d5367d408c86" message='#[" In updateProductDetailsflow ::Data Updated Succesfully"]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="fdbf649c-36d4-409a-9a83-d5367d408c86" message='#[" In updateProductDetailsflow ::Data Updated Succesfully :: Process Completed"]'/>
 	</flow>
 </mule>
