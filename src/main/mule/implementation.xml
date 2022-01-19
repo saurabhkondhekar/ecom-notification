@@ -17,7 +17,7 @@ http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/em
 		</email:smtp-connection>
 	</email:smtp-config>
 	<flow name="updateProductDetailsFlow" doc:id="173a9326-7bab-4d5b-8624-caef81376bce" >
-		<logger level="INFO" doc:name="Logger" doc:id="0bdd6502-1c51-4d28-a3eb-605c1a0d9258" message='"In updateProductDetailsFlow :: ecom-alert-notification-process"'/>
+		<logger level="INFO" doc:name="Logger" doc:id="0bdd6502-1c51-4d28-a3eb-605c1a0d9258" message='#["In updateProductDetailsFlow :: ecom-alert-notification-process started"]'/>
 		<ee:transform doc:name="Transform Message" doc:id="32b380f4-0725-4436-a02c-f869bcef439a" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
